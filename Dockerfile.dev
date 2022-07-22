@@ -1,0 +1,11 @@
+FROM golang:latest
+
+RUN set -e; \
+    git clone https://github.com/hybridgroup/gocv.git; \
+    cd gocv; \
+    cat Makefile | sed -e 's/\<sudo\> //g' > temp.txt; \
+    mv temp.txt Makefile; \
+    make install_static BUILD_SHARED_LIBS=OFF; \
+    make clean
+
+WORKDIR /go/src
