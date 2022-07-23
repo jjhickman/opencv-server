@@ -7,18 +7,18 @@ RUN set -e; \
     make install_static BUILD_SHARED_LIBS=OFF; \
     make clean
 WORKDIR /go/src
-COPY . /go/src/opencv-server
-RUN cd /go/src/opencv-server; \
-    go build -o build/opencv-server -tags static /go/src/opencv-server/cmd/opencv-server
+COPY . /go/src/telescope
+RUN cd /go/src/telescope; \
+    go build -o build/telescope -ldflags="-s -w" -tags static /go/src/telescope/cmd/telescope
 
 FROM debian:bullseye-slim
-WORKDIR /opencv-server
+WORKDIR /telescope
 RUN set -e; \
     apt-get update; \
     apt-get install --no-install-recommends -y libjpeg-dev; \
     apt-get autoremove -y; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
-COPY --from=0 /go/src/opencv-server/build/opencv-server ./
+COPY --from=0 /go/src/telescope/build/telescope ./
 EXPOSE 8080
-CMD ["./opencv-server"]
+CMD ["./telescope"]

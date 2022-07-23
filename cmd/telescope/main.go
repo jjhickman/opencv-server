@@ -8,6 +8,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
+	"github.com/jjhickman/telescope/internal/face"
+	"github.com/jjhickman/telescope/internal/info"
 	"gocv.io/x/gocv"
 )
 
@@ -45,10 +47,14 @@ func main() {
 	fmt.Println(gocv.OpenCVVersion())
 	flag.Parse()
 	log.SetFlags(0)
+	http.HandleFunc("/face/detect", face.Detect)
+	http.HandleFunc("/face/detect/video", face.DetectVideo)
+	http.HandleFunc("/face/blur", face.Blur)
+	http.HandleFunc("/face/blur/video", face.BlurVideo)
+	http.HandleFunc("/info", info.Info)
 	http.HandleFunc("/echo", echo)
 	http.HandleFunc("/", home)
 	log.Fatal(http.ListenAndServe(*addr, nil))
-
 }
 
 var homeTemplate = template.Must(template.New("").Parse(`
