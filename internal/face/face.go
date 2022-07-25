@@ -1,67 +1,79 @@
 package face
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
+	"github.com/jjhickman/telescope/internal/log"
 	"gocv.io/x/gocv"
 )
 
+type Face struct {
+	logger     *log.Logger
+	classifier gocv.CascadeClassifier
+}
+
 var upgrader = websocket.Upgrader{} // use default options
 
-func Detect(w http.ResponseWriter, r *http.Request) {
-	log.Print(gocv.OpenCVVersion())
+func (f *Face) Detect(w http.ResponseWriter, r *http.Request) {
+	f.logger.Info("/face/detect", log.String("source", "..."))
+}
+
+func (f *Face) Blur(w http.ResponseWriter, r *http.Request) {
+	f.logger.Info("/face/blur", log.String("source", "..."))
 
 }
 
-func Blur(w http.ResponseWriter, r *http.Request) {
-	log.Print(gocv.OpenCVVersion())
-
+func (f *Face) BlurVideo(w http.ResponseWriter, r *http.Request) {
+	f.logger.Info("/face/blur/video", log.String("source", "..."))
+	/*
+		c, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			return
+		}
+		defer c.Close()
+		for {
+			mt, message, err := c.ReadMessage()
+			if err != nil {
+				break
+			}
+			err = c.WriteMessage(mt, message)
+			if err != nil {
+				break
+			}
+		}
+	*/
 }
 
-func BlurVideo(w http.ResponseWriter, r *http.Request) {
-	log.Print(gocv.OpenCVVersion())
-	c, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Print("upgrade:", err)
-		return
-	}
-	defer c.Close()
-	for {
-		mt, message, err := c.ReadMessage()
+func (f *Face) DetectVideo(w http.ResponseWriter, r *http.Request) {
+	f.logger.Info("/face/detect/video", log.String("source", "..."))
+	/*
+		c, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			log.Println("read:", err)
-			break
+			return
 		}
-		log.Printf("recv: %s", message)
-		err = c.WriteMessage(mt, message)
-		if err != nil {
-			log.Println("write:", err)
-			break
+		defer c.Close()
+		for {
+			mt, message, err := c.ReadMessage()
+			if err != nil {
+				break
+			}
+			err = c.WriteMessage(mt, message)
+			if err != nil {
+				break
+			}
 		}
-	}
+	*/
 }
 
-func DetectVideo(w http.ResponseWriter, r *http.Request) {
-	log.Print(gocv.OpenCVVersion())
-	c, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Print("upgrade:", err)
-		return
+func (f *Face) Destroy() {
+	defer f.classifier.Close()
+}
+
+func New(logger *log.Logger, xmlFile string) *Face {
+	classifier := gocv.NewCascadeClassifier()
+	if !classifier.Load(xmlFile) {
+		return nil
 	}
-	defer c.Close()
-	for {
-		mt, message, err := c.ReadMessage()
-		if err != nil {
-			log.Println("read:", err)
-			break
-		}
-		log.Printf("recv: %s", message)
-		err = c.WriteMessage(mt, message)
-		if err != nil {
-			log.Println("write:", err)
-			break
-		}
-	}
+	return &Face{logger: logger, classifier: classifier}
 }

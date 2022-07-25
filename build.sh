@@ -1,0 +1,1 @@
+go build -o ./build/telescope -ldflags="-s -w" -tags static ./cmd/telescope
