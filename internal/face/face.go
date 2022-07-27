@@ -16,7 +16,7 @@ type Face struct {
 var upgrader = websocket.Upgrader{} // use default options
 
 func (f *Face) Detect(w http.ResponseWriter, r *http.Request) {
-	f.logger.Info("/face/detect", log.String("source", "..."))
+	f.logger.Info("telescope/face/detect", log.String("source", "..."))
 }
 
 func (f *Face) Blur(w http.ResponseWriter, r *http.Request) {
@@ -25,7 +25,7 @@ func (f *Face) Blur(w http.ResponseWriter, r *http.Request) {
 }
 
 func (f *Face) BlurVideo(w http.ResponseWriter, r *http.Request) {
-	f.logger.Info("/face/blur/video", log.String("source", "..."))
+	f.logger.Info("telescope/face/blur/video", log.String("source", "..."))
 	/*
 		c, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
@@ -46,7 +46,7 @@ func (f *Face) BlurVideo(w http.ResponseWriter, r *http.Request) {
 }
 
 func (f *Face) DetectVideo(w http.ResponseWriter, r *http.Request) {
-	f.logger.Info("/face/detect/video", log.String("source", "..."))
+	f.logger.Info("telescope/face/detect/video", log.String("source", "..."))
 	/*
 		c, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {

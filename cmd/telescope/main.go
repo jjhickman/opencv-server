@@ -1,15 +1,18 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"net/http"
 	"path/filepath"
-	"telescope/internal/log"
+	"sync"
+	"time"
 
 	"github.com/jjhickman/telescope/internal/capture"
 	"github.com/jjhickman/telescope/internal/face"
 	"github.com/jjhickman/telescope/internal/info"
 	"github.com/jjhickman/telescope/internal/log"
+	"github.com/mattn/go-mjpeg"
 )
 
 var (
@@ -18,10 +21,11 @@ var (
 )
 
 func home(w http.ResponseWriter, r *http.Request) {
+
 }
 
 func main() {
-	var addr = flag.String("address", "localhost:8080", "http service address")
+	var address = flag.String("address", "0.0.0.0:8080", "http service address")
 	var logPath = flag.String("logPath", "./data", "Directory to store logs")
 	var logSize = flag.Int("logSize", 25, "Log file size in MB")
 	var logAge = flag.Int("logAge", 1, "Log file age in days")
@@ -29,6 +33,9 @@ func main() {
 	var cascadeXmlFile = flag.String("cascadeXmlFile", "./data/haarcascade_frontalface_default.xml", "File path for Haar Cascade XML template")
 	var enableCapture = flag.Bool("capture", false, "Enable capturing from backend camera if available")
 	var deviceId = flag.Int("camera", 0, "Device ID of backend camera")
+	var interval = flag.Duration("interval", 50*time.Millisecond, "interval")
+	var videoHeight = flag.Int("videoHeight", 720, "Height of video capture in pixels")
+	var videoWidth = flag.Int("videoWidth", 720, "Width of video capture in pixels")
 	flag.Parse()
 
 	var tops = []log.TeeOption{
@@ -51,10 +58,15 @@ func main() {
 	log.Info("telescope", log.String("version", version), log.String("buildTime", buildTime), log.String("logPath", *logPath), log.Bool("capture", *enableCapture))
 	i := info.New(logger, version, buildTime)
 	f := face.New(logger, *cascadeXmlFile)
+	ctx, cancel := context.WithCancel(context.Background())
+	var wg sync.WaitGroup
+	wg.Add(1)
+	stream := mjpeg.NewStreamWithInterval(*interval)
 	var c *capture.Capture
 	if *enableCapture {
-		c = capture.New(logger, *cascadeXmlFile, *deviceId)
-		http.HandleFunc("/capture", c.Raw)
+		c = capture.New(logger, *deviceId, stream, ctx, &wg, *videoHeight, *videoWidth)
+		go c.Stream()
+		http.HandleFunc("/capture", stream.ServeHTTP)
 	}
 
 	if f != nil {
@@ -66,12 +78,14 @@ func main() {
 
 	http.HandleFunc("/version", i.Version)
 	http.HandleFunc("/", home)
-	err := http.ListenAndServe(*addr, nil).Error()
+	err := http.ListenAndServe(*address, nil).Error()
 	if f != nil {
 		f.Destroy()
 	}
-	if c != nil {
-		c.Destroy()
+	if stream != nil {
+		stream.Close()
 	}
+	cancel()
+	wg.Wait()
 	log.Fatal("telescope", log.String("error", err))
 }

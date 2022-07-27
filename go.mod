@@ -8,6 +8,8 @@ require (
 )
 
 require (
+	github.com/hybridgroup/mjpeg v0.0.0-20140228234708-4680f319790e // indirect
+	github.com/mattn/go-mjpeg v0.0.3 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
