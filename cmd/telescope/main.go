@@ -4,6 +4,7 @@ import (
 	"flag"
 	"net/http"
 	"path/filepath"
+	"telescope/internal/log"
 
 	"github.com/jjhickman/telescope/internal/capture"
 	"github.com/jjhickman/telescope/internal/face"
@@ -11,7 +12,10 @@ import (
 	"github.com/jjhickman/telescope/internal/log"
 )
 
-const version = "v0.1"
+var (
+	version   string
+	buildTime string
+)
 
 func home(w http.ResponseWriter, r *http.Request) {
 }
@@ -44,9 +48,8 @@ func main() {
 
 	logger := log.NewTeeWithRotate(tops)
 	log.ResetDefault(logger)
-	log.Info("telescope", log.String("status", "started"))
-
-	i := info.New(logger, version)
+	log.Info("telescope", log.String("version", version), log.String("buildTime", buildTime), log.String("logPath", *logPath), log.Bool("capture", *enableCapture))
+	i := info.New(logger, version, buildTime)
 	f := face.New(logger, *cascadeXmlFile)
 	var c *capture.Capture
 	if *enableCapture {
